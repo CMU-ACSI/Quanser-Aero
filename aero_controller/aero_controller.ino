@@ -51,45 +51,40 @@ void controller_step() {  /* MODIFY THIS FUNCTION */
     LEDRed = 0;
     LEDGreen = 0;
     LEDBlue = 999;
-  }
 
-  else if (t >= 8 && t <12){
+  } else if (t >= 8 && t <12){
     motor0Voltage = -10.0;
     motor1Voltage = 0.0;
 
     LEDRed = 999;
     LEDGreen = 500;
     LEDBlue = 0;
-  }
 
-  else if (t >=12 && t <16){
+  } else if (t >=12 && t <16){
     motor0Voltage = 0.0;
     motor0Voltage = 0.0;
 
     LEDRed = 0;
     LEDGreen = 0;
     LEDBlue = 999;
-  }
 
-  else if (t >= 16 && t <20 ){
+  } else if (t >= 16 && t <20 ){
     motor0Voltage = 0.0;
     motor1Voltage = 10.0;
 
     LEDRed = 999;
     LEDGreen = 500;
     LEDBlue = 0;
-  }
 
-  else if (t >= 20 && t <24){
+  } else if (t >= 20 && t <24){
     motor0Voltage = 0.0;
     motor1Voltage = -10.0;
 
     LEDRed = 0;
     LEDGreen = 0;
     LEDBlue = 999;
-    }
 
-  else if (t >= 24){
+  } else if (t >= 24){
     motor0Voltage = 0.0;
     motor1Voltage = 0.0;
 
