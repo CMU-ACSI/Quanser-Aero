@@ -23,10 +23,10 @@ www.cmu.edu
 #include "QUBEServo.h"  // QUBE Servo library
 #include "ACSI_lib.h"
 
-// DECLARE GLOBAL VARIABLES HERE IF NEEDED
+/* DECLARE GLOBAL VARIABLES HERE IF NEEDED */
 
-// Discrete-time controller (MODIFY THIS FUNCTION)
-void controller_step() {
+// Discrete-time controller
+void controller_step() {  /* MODIFY THIS FUNCTION */
   // Accessible global variables:
   //    Input variables:
   //        seconds - (float) Time elapsed since start of program in seconds
@@ -41,15 +41,20 @@ void controller_step() {
   // Below demonstrates changing the LED state (you probably don't care) 
   // and changing the motor voltage (you certainly DO care)
   if (theta <= -(20*M_PI/180.0)) {
-    LEDRed = 0;
-    LEDGreen = 999;
+    LEDRed = 999;
+    LEDGreen = 0;
     LEDBlue = 0;
     motorVoltage = -1.0;
   } else if (theta >= (20*M_PI/180.0)) {
-    LEDRed = 0;
+    LEDRed = 999;
     LEDGreen = 0;
-    LEDBlue = 999;
+    LEDBlue = 0;
     motorVoltage = 1.0;
+  } else {
+    LEDRed = 0;
+    LEDGreen = 999;
+    LEDBlue = 0;
+    motorVoltage = 0.0; 
   }
 }
 
@@ -66,10 +71,11 @@ void setup() {
   // Serial Monitor for the data to be displayed properly.)
   Serial.begin(250000);
 
-  // Initialize global variables (CHANGE HYPERPARAMETERS HERE)
+  // Initialize global variables 
+  /* CHANGE HYPERPARAMETERS HERE */
   sampleMicros = 2000; // set the sample time in microseconds
 
-  // ADDITIONAL INITIALIZATIONS HERE IF NEEDED (ex: GENERATE REFERENCE OFFLINE)
+  /* ADDITIONAL INITIALIZATIONS HERE IF NEEDED (ex: GENERATE REFERENCE OFFLINE) */
 
 }
 
