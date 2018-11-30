@@ -2,10 +2,10 @@
 24-774 Advanced Control System Integration
 */
 
-#include "QUBEServo.h"
+#include "Aero.h"
 
-#ifndef ACSI_lib_h
-#define ACSI_lib_h
+#ifndef ACSI_aero_lib_h
+#define ACSI_aero_lib_h
 
 extern bool startup = true;  // true the first time the sketch is run after the Arduino power is cycled or the reset pushbutton is pressed
 
@@ -31,7 +31,7 @@ extern float currentSense1;
 extern int baseModuleID;
 extern int coreModuleID;
 
-// set pin 10 as the slave select for the Quanser QUBE
+// set pin 10 as the slave select for the Quanser Aero
 // (Note that if a different pin is used for the slave select, pin 10 should be set as
 // an output to prevent accidentally putting the Arduino UNO into slave mode.)
 const int slaveSelectPin;

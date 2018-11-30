@@ -1,7 +1,7 @@
 /*
-Quanser QUBE Servo Startup - ACSI
+Quanser Aero Startup - ACSI
 
-An example using the Arduino UNO board to communicate with the Quanser QUBE Servo
+An example using the Arduino UNO board to communicate with the Quanser Aero
 through the microcontroller interface panel.  This implements a pseudo-controller
 to demonstrate sensor read and motor write functionality.
 
@@ -20,42 +20,84 @@ www.cmu.edu
 #include <SPI.h>
 #include <math.h>
 
-#include "QUBEServo.h"  // QUBE Servo library
-#include "ACSI_lib.h"
+#include "Aero.h"  // QUBE Servo library
+#include "ACSI_aero_lib.h"
 
 /* DECLARE GLOBAL VARIABLES HERE IF NEEDED */
+float t = 0;
 
 // Discrete-time controller
 void controller_step() {  /* MODIFY THIS FUNCTION */
   // Accessible global variables:
   //    Input variables:
   //        seconds - (float) Time elapsed since start of program in seconds
-  //        theta - (float) Pendulum angle radians
-  //        alpha - (float) Arm angle in radians
+  //        pitch - (float) Aero pitch in radians
+  //        yaw - (float) Aero yaw in radians
   //    Output variables:
-  //        motorVoltage - (float) Signal sent to the motor in Volts
+  //        motor0Voltage - (float) Signal sent to motor0 in Volts
+  //        motor1Voltage - (float) Signal sent to motor1 in Volts
   //        LEDRed - (float) Red LED intensity on a scale of 0 to 999
   //        LEDGreen - (float) Green LED intensity on a scale of 0 to 999
   //        LEDBlue - (float) Blue LED intensity on a scale of 0 to 999
 
   // Below demonstrates changing the LED state (you probably don't care) 
   // and changing the motor voltage (you certainly DO care)
-  if (theta <= -(20*M_PI/180.0)) {
-    LEDRed = 999;
-    LEDGreen = 0;
-    LEDBlue = 0;
-    motorVoltage = -1.0;
-  } else if (theta >= (20*M_PI/180.0)) {
-    LEDRed = 999;
-    LEDGreen = 0;
-    LEDBlue = 0;
-    motorVoltage = 1.0;
-  } else {
+  t = int(seconds) % 24;
+
+  if (t >= 4 && t < 8){
+    motor0Voltage = 10.0;
+    motor1Voltage = 0.0;
+
     LEDRed = 0;
-    LEDGreen = 999;
-    LEDBlue = 0;
-    motorVoltage = 0.0; 
+    LEDGreen = 0;
+    LEDBlue = 999;
   }
+
+  else if (t >= 8 && t <12){
+    motor0Voltage = -10.0;
+    motor1Voltage = 0.0;
+
+    LEDRed = 999;
+    LEDGreen = 500;
+    LEDBlue = 0;
+  }
+
+  else if (t >=12 && t <16){
+    motor0Voltage = 0.0;
+    motor0Voltage = 0.0;
+
+    LEDRed = 0;
+    LEDGreen = 0;
+    LEDBlue = 999;
+  }
+
+  else if (t >= 16 && t <20 ){
+    motor0Voltage = 0.0;
+    motor1Voltage = 10.0;
+
+    LEDRed = 999;
+    LEDGreen = 500;
+    LEDBlue = 0;
+  }
+
+  else if (t >= 20 && t <24){
+    motor0Voltage = 0.0;
+    motor1Voltage = -10.0;
+
+    LEDRed = 0;
+    LEDGreen = 0;
+    LEDBlue = 999;
+    }
+
+  else if (t >= 24){
+    motor0Voltage = 0.0;
+    motor1Voltage = 0.0;
+
+    LEDRed = 999;
+    LEDGreen = 500;
+    LEDBlue = 0;
+  }
+
 }
 
 // This function will be called once during initialization
