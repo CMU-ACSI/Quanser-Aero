@@ -146,7 +146,7 @@ void loop() {
 
   // Print data to the Arduino Serial Monitor in between SPI transactions
   // (Note that the Serial.print() function is time consuming.  Printing the entire
-  // string at once would exceed the sample time required to balance the pendulum.)
+  // string at once would exceed the sample time required to balance the aero.)
   else {  //We're in between samples
     // Only print if there's a string ready to be printed, and there's enough time before the next SPI transaction
     if ( (displayData.dDataReady) && (currentMicros - previousMicros <= (sampleMicros - 100)) ) {
