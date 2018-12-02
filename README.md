@@ -2,7 +2,7 @@
 
 Software for the Aero system
 
-### aero_controller
+**aero_controller**
 
 Sketch folder containing Arduino code for controlling Quanser QUBE-Servo 2
 
