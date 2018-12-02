@@ -29,22 +29,30 @@ float t = 0;
 // Discrete-time controller
 void controller_step() {  /* MODIFY THIS FUNCTION */
   // Accessible global variables:
-  //    Input variables:
-  //        seconds - (float) Time elapsed since start of program in seconds
-  //        pitch - (float) Aero pitch in radians
-  //        yaw - (float) Aero yaw in radians
-  //    Output variables:
-  //        motor0Voltage - (float) Signal sent to motor0 in Volts
-  //        motor1Voltage - (float) Signal sent to motor1 in Volts
-  //        LEDRed - (float) Red LED intensity on a scale of 0 to 999
-  //        LEDGreen - (float) Green LED intensity on a scale of 0 to 999
-  //        LEDBlue - (float) Blue LED intensity on a scale of 0 to 999
+  //    - Input variables
+  //        float seconds;  // Time elapsed since start of program in seconds
+  //        float pitch;    // Aero pitch in radians
+  //        float yaw;      // Aero yaw in radians
+  //    - Output variables -
+  //        float motor0Voltage;  // Signal sent to motor0 in Volts
+  //        float motor1Voltage;  // Signal sent to motor1 in Volts
+  //        int LEDRed;           // Red LED intensity on a scale of 0 to 999
+  //        int LEDGreen;         // Green LED intensity on a scale of 0 to 999
+  //        int LEDBlue;          // Blue LED intensity on a scale of 0 to 999
 
   // Below demonstrates changing the LED state (you probably don't care) 
   // and changing the motor voltage (you certainly DO care)
-  t = int(seconds) % 24;
+  t = int(seconds) % 12;
+  
+  if (t < 2){
+    motor0Voltage = 0.0;
+    motor1Voltage = 0.0;
 
-  if (t >= 4 && t < 8){
+    LEDRed = 0;
+    LEDGreen = 999;
+    LEDBlue = 0;
+    
+  } else if (t >= 2 && t < 4){
     motor0Voltage = 10.0;
     motor1Voltage = 0.0;
 
@@ -52,47 +60,39 @@ void controller_step() {  /* MODIFY THIS FUNCTION */
     LEDGreen = 0;
     LEDBlue = 999;
 
-  } else if (t >= 8 && t <12){
+  } else if (t >= 4 && t < 6){
     motor0Voltage = -10.0;
     motor1Voltage = 0.0;
 
-    LEDRed = 999;
-    LEDGreen = 500;
-    LEDBlue = 0;
-
-  } else if (t >=12 && t <16){
-    motor0Voltage = 0.0;
-    motor0Voltage = 0.0;
-
     LEDRed = 0;
-    LEDGreen = 0;
+    LEDGreen = 500;
     LEDBlue = 999;
 
-  } else if (t >= 16 && t <20 ){
+  } else if (t >= 6 && t < 8){
+    motor0Voltage = 0.0;
+    motor0Voltage = 0.0;
+    
+    LEDRed = 0;
+    LEDGreen = 999;
+    LEDBlue = 0;
+
+  } else if (t >= 8 && t < 10 ){
     motor0Voltage = 0.0;
     motor1Voltage = 10.0;
 
     LEDRed = 999;
-    LEDGreen = 500;
+    LEDGreen = 0;
     LEDBlue = 0;
 
-  } else if (t >= 20 && t <24){
+  } else if (t >= 10 && t < 12){
     motor0Voltage = 0.0;
     motor1Voltage = -10.0;
-
-    LEDRed = 0;
-    LEDGreen = 0;
-    LEDBlue = 999;
-
-  } else if (t >= 24){
-    motor0Voltage = 0.0;
-    motor1Voltage = 0.0;
 
     LEDRed = 999;
     LEDGreen = 500;
     LEDBlue = 0;
   }
-
+  
 }
 
 // This function will be called once during initialization
@@ -120,7 +120,7 @@ void setup() {
 void loop() {
   // Reset after the Arduino power is cycled or the reset pushbutton is pressed
   if (startup) {
-    resetQUBEServo();
+    resetQuanserAero();
     startup = false;
   }
   
@@ -135,8 +135,12 @@ void loop() {
     readSensors();
 
     // This will define the data that will be displayed at the serial terminal.
-    displayData.buildString(theta, alpha, currentSense, moduleID, moduleStatus);
-
+    sampleTimeTickCount++;
+    if (sampleTimeTickCount == serialOutputDecimation) {
+      displayData.buildString(pitch*(180.0/M_PI), yaw*(180.0/M_PI), currentSense0, currentSense1);
+      sampleTimeTickCount = 0;
+    }
+    
     // Run discrete controller timestep
     controller_step();
 
@@ -157,6 +161,15 @@ void loop() {
         // If the entire string has been printed, clear the flag so a new string can be obtained
         if(displayData.dDataIndex == displayData.dData.length()) {
           displayData.dDataReady = false;
+        }
+      }
+
+      // if there is something to read, get the character
+      if (Serial.available() > 0) {
+        char currentChar = Serial.read();
+        
+        if (currentChar == 'r') {
+          resetStall = 1;              
         }
       }
     }

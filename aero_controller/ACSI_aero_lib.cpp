@@ -13,7 +13,9 @@ bool startup = true;  // true the first time the sketch is run after the Arduino
 
 unsigned long previousMicros = 0;   // used to store the last time the SPI data was written
 unsigned long currentMicros = 0;    // used to store the current time
-unsigned long sampleMicros = 5000;  // the sample time in microseconds
+unsigned long sampleMicros = 2000;  // the sample time in microseconds
+unsigned long sampleTimeTickCount = 0;
+const long serialOutputDecimation = 600;  // number of samples between serial outputs
 
 // global variables for LED intensity (999 is maximum intensity, 0 is off)
 int LEDRed = 0;
@@ -25,13 +27,15 @@ float seconds = 0.0;
 float pitch = 0.0;  // pitch angle in radians
 float yaw = 0.0;  // yaw angle in radians
 
-float motor0Voltage = 1.0;
-float motor1Voltage = 1.0;
+float motor0Voltage = 0.0;
+float motor1Voltage = 0.0;
 
 float currentSense0 = 0.0;
 float currentSense1 = 0.0;
 int baseModuleID = 0;
 int coreModuleID = 0;
+
+int resetStall = 0;
 
 // set pin 10 as the slave select for the Quanser Aero
 // (Note that if a different pin is used for the slave select, pin 10 should be set as
@@ -93,18 +97,18 @@ byte yGyroLSB = 0;                  // Y-axis gyroscope LSB
 byte yGyroMSB = 0;                  // Y-axis gyroscope MSB
 byte zGyroLSB = 0;                  // Z-axis gyroscope LSB
 byte zGyroMSB = 0;                  // Z-axis gyroscope MSB
-byte reserved0 = 0;                 // reserved for future use
-byte reserved1 = 0;                 // reserved for future use
-byte reserved2 = 0;                 // reserved for future use
-byte reserved3 = 0;                 // reserved for future use
-byte reserved4 = 0;                 // reserved for future use
+//byte reserved0 = 0;                 // reserved for future use
+//byte reserved1 = 0;                 // reserved for future use
+//byte reserved2 = 0;                 // reserved for future use
+//byte reserved3 = 0;                 // reserved for future use
+//byte reserved4 = 0;                 // reserved for future use
 
 //Setup serial builder
 Display displayData;
 
 void readSensors() {
   // update time
-  seconds = seconds + (float)sampleMicros;
+  seconds = seconds + (float)sampleMicros/1000000.0;
 
   // initialize the SPI bus using the defined speed, data order and data mode
   SPI.beginTransaction(SPISettings(1000000, MSBFIRST, SPI_MODE2));
@@ -132,6 +136,10 @@ void readSensors() {
   coreModuleIDMSB = SPI.transfer(coreMode);            // read the module ID MSB, send the mode
   coreModuleIDLSB = SPI.transfer(0);                   // read the module ID LSB
   currentSense0MSB = SPI.transfer(coreWriteMask);      // read motor0 current sense MSB, send the write mask
+  currentSense0LSB = SPI.transfer(motor0MSB);          // read motor0 current sense LSB, send motor0 command MSB
+  currentSense1MSB = SPI.transfer(motor0LSB);          // read motor1 current sense MSB, send motor0 command LSB
+  currentSense1LSB = SPI.transfer(motor1MSB);          // read motor1 current sense LSB, send motor1 command MSB
+  tach0Byte[2] = SPI.transfer(motor1LSB);              // read tachometer0 byte 2, send motor1 command LSB
   // tach0Byte[1] = SPI.transfer(encoder0ByteSet[2]);     // read tachometer0 byte 1, send encoder0 byte 2       ==> commented out for code reduction
   // tach0Byte[0] = SPI.transfer(encoder0ByteSet[1]);     // read tachometer0 byte 0, send encoder0 byte 1
   // tach1Byte[2] = SPI.transfer(encoder0ByteSet[0]);     // read tachometer1 byte 2, send encoder0 byte 0
@@ -195,8 +203,8 @@ void readSensors() {
   // float encoder1Deg = (float)encoder1 * (360.0 / 2048.0);  // motor 1 angle
   float encoder2Deg = (float)encoder2 * (360.0 / 2048.0);  // pitch
   float encoder3Deg = (float)encoder3 * (360.0 / 4096.0);  // yaw (encoder3 is higher resolution than the other encoders)
-  pitch = encoder2Deg * (M_PI / 360.0);
-  yaw = encoder3Deg * (M_PI / 360.0);
+  pitch = encoder2Deg * (M_PI / 180.0);
+  yaw = encoder3Deg * (M_PI / 180.0);
 
   //Current Sense Values
   currentSense0 = (currentSense0MSB << 8) | currentSense0LSB;
@@ -223,15 +231,30 @@ void driveMotor() {
   float motor0PWM = motor0Voltage * (625.0 / 15.0);
   float motor1PWM = motor1Voltage * (625.0 / 15.0);
   
-  int motor0 = (int)motor0PWM;  // convert float to int (2 bytes)
-  motor0 = motor0 | 0x8000;  // motor0 command MSB must be B1xxxxxxx to enable amplifier0
-  motor0MSB = (byte)(motor0 >> 8);
-  motor0LSB = (byte)(motor0 & 0x00FF);
-  
-  int motor1 = (int)motor1PWM;  // convert float to int (2 bytes)
-  motor1 = motor1 | 0x8000;  // motor1 command MSB must be B1xxxxxxx to enable amplifier1
-  motor1MSB = (byte)(motor1 >> 8);     
-  motor1LSB = (byte)(motor1 & 0x00FF);
+  if (resetStall) {
+    motor0LSB = 0;
+    motor0MSB = 0;
+
+    motor1LSB = 0;
+    motor1MSB = 0;
+
+    LEDRed = 999;
+    LEDBlue = 0;                
+    
+    resetStall--; // reset clears when the value == 0.
+    
+  } else {
+    int motor0 = (int)motor0PWM;  // convert float to int (2 bytes)
+    motor0 = motor0 | 0x8000;  // motor0 command MSB must be B1xxxxxxx to enable amplifier0
+    motor0MSB = (byte)(motor0 >> 8);
+    motor0LSB = (byte)(motor0 & 0x00FF);
+    
+    int motor1 = (int)motor1PWM;  // convert float to int (2 bytes)
+    motor1 = motor1 | 0x8000;  // motor1 command MSB must be B1xxxxxxx to enable amplifier1
+    motor1MSB = (byte)(motor1 >> 8);     
+    motor1LSB = (byte)(motor1 & 0x00FF);
+   
+  }
     
   // convert the LED intensities to MSB and LSB
   LEDRedMSB = (byte)(LEDRed >> 8);
