@@ -20,7 +20,7 @@ www.cmu.edu
 #include <SPI.h>
 #include <math.h>
 
-#include "Aero.h"  // QUBE Servo library
+#include "Aero.h"  // Quanser Aero library
 #include "ACSI_aero_lib.h"
 
 /* DECLARE GLOBAL VARIABLES HERE IF NEEDED */
